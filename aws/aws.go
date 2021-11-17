@@ -658,6 +658,21 @@ func GetAllResources(targetRegions []string, excludeAfter time.Time, resourceTyp
 		}
 		// End EC2 VPCS
 
+		// CloudTrail Trails
+		cloudtrails := CloudTrails{}
+		if IsNukeable(cloudtrails.ResourceName(), resourceTypes) {
+			trails, err := getAllCloudTrailTrails(session, region)
+			if err != nil {
+				return nil, errors.WithStackTrace(err)
+			}
+
+			if len(trails) > 0 {
+				cloudtrails.Arns = awsgo.StringValueSlice(trails)
+				resourcesInRegion.Resources = append(resourcesInRegion.Resources, cloudtrails)
+			}
+		}
+		// End CloudTrail Trails
+
 		if len(resourcesInRegion.Resources) > 0 {
 			account.Resources[region] = resourcesInRegion
 		}
@@ -734,6 +749,7 @@ func ListResourceTypes() []string {
 		AccessAnalyzer{}.ResourceName(),
 		DynamoDB{}.ResourceName(),
 		EC2VPCs{}.ResourceName(),
+		CloudTrails{}.ResourceName(),
 	}
 	sort.Strings(resourceTypes)
 	return resourceTypes
