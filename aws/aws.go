@@ -695,6 +695,21 @@ func GetAllResources(targetRegions []string, excludeAfter time.Time, resourceTyp
 		}
 		// End IAM Users
 
+		// IAM Instance Profiles
+		iamInstanceProfiles := IAMInstanceProfiles{}
+		if IsNukeable(iamInstanceProfiles.ResourceName(), resourceTypes) {
+			profileNames, err := getAllIamInstanceProfiles(session)
+
+			if err != nil {
+				return nil, errors.WithStackTrace(err)
+			}
+			if len(profileNames) > 0 {
+				iamInstanceProfiles.ProfileNames = awsgo.StringValueSlice(profileNames)
+				globalResources.Resources = append(globalResources.Resources, iamInstanceProfiles)
+			}
+		}
+		// End IAM Instance Profiles
+
 		if len(globalResources.Resources) > 0 {
 			account.Resources[GlobalRegion] = globalResources
 		}
@@ -727,6 +742,7 @@ func ListResourceTypes() []string {
 		LambdaFunctions{}.ResourceName(),
 		S3Buckets{}.ResourceName(),
 		IAMUsers{}.ResourceName(),
+		IAMInstanceProfiles{}.ResourceName(),
 		SecretsManagerSecrets{}.ResourceName(),
 		NatGateways{}.ResourceName(),
 		OpenSearchDomains{}.ResourceName(),
